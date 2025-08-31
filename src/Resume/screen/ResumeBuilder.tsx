@@ -1,7 +1,7 @@
 import { Outlet } from "react-router";
 import { useLocation, useNavigate } from "react-router";
-import Stepper from "../components/Stepper";
-import STEPS from "../constant";
+import Stepper from "../../components/Stepper";
+import STEPS from "../../constant";
 import Header from "./Header";
 
 const getCurrentStep = (path: string) => {

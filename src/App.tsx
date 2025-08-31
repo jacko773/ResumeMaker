@@ -1,15 +1,14 @@
 import { Routes, Route } from "react-router";
-import Home from "./screen/Home";
-import Contact from "./screen/Contact";
-import ResumeBuilder from "./screen/ResumeBuilder";
-import Experience from "./screen/Experience";
-import Education from "./screen/Education";
-// import Skil from "./screen/Skill";
+import Home from "./Resume/screen/Home";
+import Contact from "./Resume/screen/Contact";
+import ResumeBuilder from "./Resume/screen/ResumeBuilder";
+import Experience from "./Resume/screen/Experience";
+import Education from "./Resume/screen/Education";
 import STEPS from "./constant";
-import Skills from "./screen/Skils";
-import Projects from "./screen/Projects";
-import Summary from "./screen/Summary";
-import { ResumeProvider } from "./context/ResumeContext";
+import Skills from "./Resume/screen/Skils";
+import Projects from "./Resume/screen/Projects";
+import Summary from "./Resume/screen/Summary";
+import { ResumeProvider } from "./Resume/context/ResumeContext";
 
 const App = () => {
   return (

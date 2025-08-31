@@ -7,10 +7,10 @@ import {
   BarChart3,
   ShieldCheck,
 } from "lucide-react";
-import Faq from "../components/Faq";
-import Feature from "../components/Feature";
-import PriceCard from "../components/PriceCard";
-import TemplateCard from "../components/TemplateCard";
+import Faq from "../../components/Faq";
+import Feature from "../../components/Feature";
+import PriceCard from "../../components/PriceCard";
+import TemplateCard from "../../components/TemplateCard";
 import Header from "./Header";
 
 export default function Home() {

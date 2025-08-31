@@ -8,8 +8,8 @@ import {
   Upload,
 } from "lucide-react";
 import { useNavigate } from "react-router";
-import Field from "../components/Field";
-import Select from "../components/Select";
+import Field from "../../components/Field";
+import Select from "../../components/Select";
 import PreviewCard from "./PreviewCard";
 import { useContactSection } from "../context/ResumeContext";
 import Footer from "./Footer";
@@ -58,7 +58,7 @@ export default function Heading() {
     setError("");
     try {
       //TODO : dispatch to backend
-      nav("/builder/work-history"); // next step route
+      nav("/builder/experience"); // next step route
     } catch (e: any) {
       setError(e?.response?.data?.error || "Could not save. Please try again.");
     } finally {
@@ -214,21 +214,11 @@ export default function Heading() {
 
         {/* Right panel: social proof + preview */}
         <aside className="lg:col-span-1">
-          <div className="mt-16 rounded-xl bg-gradient-to-br from-gray-50 to-white p-3 h-[148mm] w-[105mm] scale-[0.5] origin-top-left justify-center align-middle ">
-            <PreviewCard DEFAULT_DATA={{}} />
-          </div>
-
-          {/* <button
-            disabled={saving}
-            onClick={saveAndNext}
-            className="inline-flex items-center gap-2 mt-4 rounded-2xl bg-amber-400 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-amber-300 disabled:opacity-70"
-          >
-            Next: Experience <ArrowRight className="h-4 w-4" />
-          </button> */}
+          <PreviewCard DEFAULT_DATA={{}} scale={0.5} />
         </aside>
       </section>
       {/* Footer nav */}
-      <Footer />
+      <Footer nextSection={saveAndNext} saving={false} />
     </>
   );
 }

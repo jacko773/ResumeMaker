@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles, Target } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Sparkles,
+  Target,
+} from "lucide-react";
 import axios from "axios";
 
 /**
@@ -34,15 +40,21 @@ export default function Summary() {
   useEffect(() => {
     (async () => {
       try {
-        if (!resumeId) { setLoading(false); return; }
-        const res = await axios.get(`/api/resumes/${resumeId}`, { withCredentials: true });
+        if (!resumeId) {
+          setLoading(false);
+          return;
+        }
+        const res = await axios.get(`/api/resumes/${resumeId}`, {
+          withCredentials: true,
+        });
         const r = res?.data?.item;
         const existing = r?.sections?.summary;
-        if (typeof existing === 'string') setSummary(existing);
+        if (typeof existing === "string") setSummary(existing);
         const contact = r?.sections?.contact || {};
         setProfession(contact.profession || "Software Engineer");
         const sk = r?.sections?.skills || [];
-        if (Array.isArray(sk)) setSkills(sk.map((s: any) => ({ name: s.name, level: s.level })));
+        if (Array.isArray(sk))
+          setSkills(sk.map((s: any) => ({ name: s.name, level: s.level })));
         const exp = r?.sections?.experience || [];
         if (Array.isArray(exp)) {
           setBullets(exp.flatMap((e: any) => e.bullets || []).slice(0, 20));
@@ -61,9 +73,11 @@ export default function Summary() {
     const starts: number[] = [];
     const ends: number[] = [];
     for (const e of exp) {
-      if (e.start && /^\d{4}-\d{2}$/.test(e.start)) starts.push(+new Date(e.start + "-01"));
+      if (e.start && /^\d{4}-\d{2}$/.test(e.start))
+        starts.push(+new Date(e.start + "-01"));
       if (e.current) ends.push(+now);
-      else if (e.end && /^\d{4}-\d{2}$/.test(e.end)) ends.push(+new Date(e.end + "-01"));
+      else if (e.end && /^\d{4}-\d{2}$/.test(e.end))
+        ends.push(+new Date(e.end + "-01"));
     }
     if (!starts.length) return 0;
     const minStart = Math.min(...starts);
@@ -76,15 +90,23 @@ export default function Summary() {
     setTone(t);
     const top = skills
       .sort((a, b) => (b.level || 0) - (a.level || 0))
-      .map(s => s.name)
+      .map((s) => s.name)
       .slice(0, 5);
-    const text = buildTemplate({ tone: t, profession, yoe, targetRole: targetRole || profession, topSkills: top });
+    const text = buildTemplate({
+      tone: t,
+      profession,
+      yoe,
+      targetRole: targetRole || profession,
+      topSkills: top,
+    });
     setSummary(text);
   }
 
   function addBulletSentence(b: string) {
     const s = summarizeBullet(b);
-    setSummary(v => (v ? v.replace(/\s*$/, '') + (v.trim().endsWith('.') ? ' ' : '. ') + s : s));
+    setSummary((v) =>
+      v ? v.replace(/\s*$/, "") + (v.trim().endsWith(".") ? " " : ". ") + s : s
+    );
   }
 
   function summarizeBullet(b: string) {
@@ -99,78 +121,156 @@ export default function Summary() {
 
   async function saveAndNext() {
     if (!resumeId) return;
-    setSaving(true); setError("");
+    setSaving(true);
+    setError("");
     try {
-      await axios.patch(`/api/resumes/${resumeId}`, { sections: { summary } }, { withCredentials: true });
+      await axios.patch(
+        `/api/resumes/${resumeId}`,
+        { sections: { summary } },
+        { withCredentials: true }
+      );
       nav("/builder/preview");
     } catch (e: any) {
       setError(e?.response?.data?.error || "Could not save. Please try again.");
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading) return <div className="p-6 text-sm text-gray-500">Loading…</div>;
 
   const words = summary.trim() ? summary.trim().split(/\s+/).length : 0;
-  const targets = (keywordsText || "").split(/,|\n/).map(x => x.trim()).filter(Boolean);
-  const missing = targets.filter(k => !new RegExp("(^|\\W)" + escapeRegExp(k) + "(\\W|$)", "i").test(summary));
+  const targets = (keywordsText || "")
+    .split(/,|\n/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const missing = targets.filter(
+    (k) =>
+      !new RegExp("(^|\\W)" + escapeRegExp(k) + "(\\W|$)", "i").test(summary)
+  );
 
   return (
     <div className="min-h-screen bg-white">
-
       <section className="mx-auto max-w-6xl px-4 py-6 grid lg:grid-cols-3 gap-10">
         {/* Editor */}
         <div className="lg:col-span-2">
-          <h1 className="text-3xl font-bold">Craft your professional summary</h1>
-          <p className="text-gray-600 mt-1">Keep it concise (ideally 40–120 words). Highlight scope, stack, and measurable wins.</p>
+          <h1 className="text-3xl font-bold">
+            Craft your professional summary
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Keep it concise (ideally 40–120 words). Highlight scope, stack, and
+            measurable wins.
+          </p>
 
           {/* Tone presets + template */}
           <div className="mt-4 rounded-2xl border bg-white p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="text-sm font-semibold">Tone presets</div>
               <div className="flex flex-wrap gap-2">
-                {(["Neutral","Confident","Friendly","Technical"] as Tone[]).map(t => (
-                  <button key={t} onClick={()=>useTemplate(t)} type="button" className={`rounded-full border px-3 py-1.5 text-xs ${tone===t?'bg-sky-50 border-sky-200 text-sky-800':'hover:bg-gray-50'}`}>
-                    <Sparkles className="inline h-3.5 w-3.5 mr-1 text-sky-600"/> {t}
+                {(
+                  ["Neutral", "Confident", "Friendly", "Technical"] as Tone[]
+                ).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => useTemplate(t)}
+                    type="button"
+                    className={`rounded-full border px-3 py-1.5 text-xs ${
+                      tone === t
+                        ? "bg-sky-50 border-sky-200 text-sky-800"
+                        : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <Sparkles className="inline h-3.5 w-3.5 mr-1 text-sky-600" />{" "}
+                    {t}
                   </button>
                 ))}
               </div>
             </div>
             <div className="mt-3 grid md:grid-cols-[1fr,240px] gap-3 items-end">
               <label className="block">
-                <div className="text-sm font-medium text-gray-700">Target role (optional)</div>
-                <input className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-sky-200" value={targetRole} onChange={(e)=>setTargetRole(e.target.value)} placeholder="e.g., Senior MERN Developer" />
+                <div className="text-sm font-medium text-gray-700">
+                  Target role (optional)
+                </div>
+                <input
+                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-sky-200"
+                  value={targetRole}
+                  onChange={(e) => setTargetRole(e.target.value)}
+                  placeholder="e.g., Senior MERN Developer"
+                />
               </label>
-              <div className="text-xs text-gray-500">Uses your skills ({skills.length}) and experience (~{yoe || 0} yrs) to seed template.</div>
+              <div className="text-xs text-gray-500">
+                Uses your skills ({skills.length}) and experience (~{yoe || 0}{" "}
+                yrs) to seed template.
+              </div>
             </div>
           </div>
 
           {/* Summary box */}
           <div className="mt-4">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-700">Summary</label>
-              <div className={`text-xs ${words<40||words>120?'text-amber-700':'text-emerald-700'}`}>{words} words {words<40?"(aim 40+)":words>120?"(trim to ≤120)":"✓ good"}</div>
+              <label className="text-sm font-medium text-gray-700">
+                Summary
+              </label>
+              <div
+                className={`text-xs ${
+                  words < 40 || words > 120
+                    ? "text-amber-700"
+                    : "text-emerald-700"
+                }`}
+              >
+                {words} words{" "}
+                {words < 40
+                  ? "(aim 40+)"
+                  : words > 120
+                  ? "(trim to ≤120)"
+                  : "✓ good"}
+              </div>
             </div>
             <textarea
               className="mt-1 w-full min-h-[160px] rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-200"
-              placeholder={`E.g., MERN developer with ${yoe||""}+ years building scalable web apps. Notable strengths: ${skills.slice(0,3).map(s=>s.name).join(', ')}. Delivered XYZ impact...`}
+              placeholder={`E.g., MERN developer with ${
+                yoe || ""
+              }+ years building scalable web apps. Notable strengths: ${skills
+                .slice(0, 3)
+                .map((s) => s.name)
+                .join(", ")}. Delivered XYZ impact...`}
               value={summary}
-              onChange={(e)=>setSummary(e.target.value)}
+              onChange={(e) => setSummary(e.target.value)}
             />
-            <div className="mt-1 text-[11px] text-gray-500">Tip: Start with role + scope, add 2–3 strengths, end with a tangible result.</div>
+            <div className="mt-1 text-[11px] text-gray-500">
+              Tip: Start with role + scope, add 2–3 strengths, end with a
+              tangible result.
+            </div>
           </div>
 
           {/* Keyword checker */}
           <div className="mt-4 rounded-2xl border bg-white p-4">
-            <div className="flex items-center gap-2 text-sm font-semibold"><Target className="h-4 w-4"/> ATS keyword checker</div>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Target className="h-4 w-4" /> ATS keyword checker
+            </div>
             <div className="mt-2 grid md:grid-cols-[1fr,auto] gap-3 items-start">
-              <input className="rounded-lg border px-3 py-2 text-sm" value={keywordsText} onChange={(e)=>setKeywordsText(e.target.value)} placeholder="Paste target keywords (comma separated): React, Express, MongoDB, AWS" />
-              <div className="text-xs text-gray-500">We’ll flag what’s missing below.</div>
+              <input
+                className="rounded-lg border px-3 py-2 text-sm"
+                value={keywordsText}
+                onChange={(e) => setKeywordsText(e.target.value)}
+                placeholder="Paste target keywords (comma separated): React, Express, MongoDB, AWS"
+              />
+              <div className="text-xs text-gray-500">
+                We’ll flag what’s missing below.
+              </div>
             </div>
             {!!targets.length && (
               <div className="mt-2 flex flex-wrap gap-2">
-                {targets.map(k => (
-                  <span key={k} className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] ${missing.includes(k)?'bg-white text-gray-700':'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>
-                    {missing.includes(k) ? '○' : '✓'} {k}
+                {targets.map((k) => (
+                  <span
+                    key={k}
+                    className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] ${
+                      missing.includes(k)
+                        ? "bg-white text-gray-700"
+                        : "bg-emerald-50 border-emerald-200 text-emerald-800"
+                    }`}
+                  >
+                    {missing.includes(k) ? "○" : "✓"} {k}
                   </span>
                 ))}
               </div>
@@ -180,10 +280,17 @@ export default function Summary() {
           {/* Import from work bullets */}
           {bullets.length ? (
             <div className="mt-4 rounded-2xl border bg-white p-4">
-              <div className="text-sm font-semibold mb-2">Quick add from your work history</div>
+              <div className="text-sm font-semibold mb-2">
+                Quick add from your work history
+              </div>
               <div className="grid sm:grid-cols-2 gap-2 max-h-56 overflow-auto">
                 {bullets.slice(0, 12).map((b, i) => (
-                  <button key={i} type="button" onClick={()=>addBulletSentence(b)} className="text-left rounded-xl border px-3 py-2 text-xs hover:bg-gray-50">
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => addBulletSentence(b)}
+                    className="text-left rounded-xl border px-3 py-2 text-xs hover:bg-gray-50"
+                  >
                     + {b}
                   </button>
                 ))}
@@ -199,10 +306,17 @@ export default function Summary() {
           <div className="rounded-2xl border bg-white p-4 shadow-sm">
             <div className="text-sm font-semibold">Live preview</div>
             <div className="mt-3 rounded-xl border bg-gradient-to-br from-gray-50 to-white p-3 text-sm text-gray-800 leading-relaxed">
-              {summary || <span className="text-gray-500">Your summary will appear here.</span>}
+              {summary || (
+                <span className="text-gray-500">
+                  Your summary will appear here.
+                </span>
+              )}
             </div>
             {targets.length ? (
-              <div className="mt-3 text-[11px] text-gray-600">Missing keywords: {missing.length ? missing.join(', ') : 'None — great!'}</div>
+              <div className="mt-3 text-[11px] text-gray-600">
+                Missing keywords:{" "}
+                {missing.length ? missing.join(", ") : "None — great!"}
+              </div>
             ) : null}
           </div>
         </aside>
@@ -211,11 +325,18 @@ export default function Summary() {
       {/* Bottom actions */}
       <div className="border-t bg-white sticky bottom-0">
         <div className="mx-auto max-w-6xl px-4 py-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
-          <button onClick={()=>nav('/builder/projects')} className="inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm">
-            <ArrowLeft className="h-4 w-4"/> Back: Projects
+          <button
+            onClick={() => nav("/builder/projects")}
+            className="inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back: Projects
           </button>
-          <button disabled={saving} onClick={saveAndNext} className="inline-flex items-center gap-2 rounded-2xl bg-amber-400 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-amber-300 disabled:opacity-70">
-            Next: Preview <ArrowRight className="h-4 w-4"/>
+          <button
+            disabled={saving}
+            onClick={saveAndNext}
+            className="inline-flex items-center gap-2 rounded-2xl bg-amber-400 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-amber-300 disabled:opacity-70"
+          >
+            Next: Preview <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -223,7 +344,19 @@ export default function Summary() {
   );
 }
 
-function buildTemplate({ tone, profession, yoe, topSkills, targetRole }: { tone: "Neutral"|"Confident"|"Friendly"|"Technical"; profession: string; yoe: number; topSkills: string[]; targetRole: string }) {
+function buildTemplate({
+  tone,
+  profession,
+  yoe,
+  topSkills,
+  targetRole,
+}: {
+  tone: "Neutral" | "Confident" | "Friendly" | "Technical";
+  profession: string;
+  yoe: number;
+  topSkills: string[];
+  targetRole: string;
+}) {
   const skillList = topSkills.join(", ");
   const yrs = yoe ? `${yoe}+ years` : "hands‑on";
   const base = {
@@ -235,24 +368,6 @@ function buildTemplate({ tone, profession, yoe, topSkills, targetRole }: { tone:
   return base[tone];
 }
 
-function escapeRegExp(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-
-function Stepper({ steps, current }: { steps: string[]; current: number }) {
-  return (
-    <div className="flex items-center gap-3 overflow-x-auto py-1">
-      {steps.map((s, i) => (
-        <div key={s} className="flex items-center gap-3">
-          <div className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs ${i === current ? 'bg-sky-50 border-sky-200 text-sky-800' : 'bg-white text-gray-600'}`}>
-            {i < current ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-600"/>
-            ) : (
-              <span className={`h-2 w-2 rounded-full ${i===current?'bg-sky-600':'bg-gray-300'}`}></span>
-            )}
-            <span className="whitespace-nowrap">{s}</span>
-          </div>
-          {i !== steps.length - 1 && <div className="h-px w-6 bg-gray-200" />}
-        </div>
-      ))}
-    </div>
-  );
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

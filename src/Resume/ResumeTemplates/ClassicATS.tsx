@@ -55,10 +55,10 @@ export function ClassicATS({
       ) : null,
 
     experience:
-      Array.isArray(data?.sections?.workHistory) && !hidden.workHistory ? (
+      Array.isArray(data?.sections?.experience) && !hidden.experience ? (
         <Section title="EXPERIENCE">
           <div className="space-y-3">
-            {data.sections.workHistory.map((e: any, i: number) => (
+            {data.sections.experience.map((e: any, i: number) => (
               <div key={i} className="break-inside-avoid">
                 <div className="flex items-baseline justify-between">
                   <div className="font-semibold">

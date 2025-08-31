@@ -1,62 +1,87 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { CheckCircle2, Plus, Trash2, MoveUp, MoveDown } from "lucide-react";
+import {
+  CheckCircle2,
+  Plus,
+  Trash2,
+  MoveUp,
+  MoveDown,
+  GraduationCap,
+} from "lucide-react";
+import axios from "axios";
 import Footer from "./Footer";
 import PreviewCard from "./PreviewCard";
-import { useExperinenceSection } from "../context/ResumeContext";
+import { useEducationSection } from "../context/ResumeContext";
 
 /**
- * Builder — Section 2: Work History
+ * Builder — Section 3: Education
  *
- * - Manage a list of experience entries (role, company, location, dates, bullets)
- * - Inline validation + reorder + remove
- * - Right-side live preview synced with form
- * - Saves to resume.sections.experience[]
+ * - Manage a list of education entries (degree, field, school, location, dates, GPA)
+ * - Optional highlights/coursework as bullets
+ * - Reorder/remove with live preview
+ * - Saves to resume.sections.education[]
  */
-export default function WorkHistory() {
-  // const nav = useNavigate();
+export default function Education() {
+  const nav = useNavigate();
   const resumeId = useMemo(() => localStorage.getItem("resumeId"), []);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>("");
 
-  const nav = useNavigate();
-
   type Entry = {
-    role: string;
-    company: string;
+    degree: string; // e.g., B.Tech, BSc, MSc
+    field?: string; // e.g., Computer Science
+    school: string; // e.g., IIT Bombay
     city?: string;
     country?: string;
     start?: string; // YYYY-MM
-    end?: string; // YYYY-MM or "present"
-    current?: boolean;
-    bullets: string[];
+    end?: string; // YYYY-MM
+    current?: boolean; // currently studying
+    gpa?: string; // e.g., 8.6/10 or 3.7/4.0
+    bullets: string[]; // coursework/highlights
   };
 
-  const [items = [], setItems] = useExperinenceSection();
+  const [
+    items = [
+      {
+        degree: "",
+        field: "",
+        school: "",
+        city: "",
+        country: "",
+        start: "",
+        end: "",
+        bullets: [],
+      },
+    ],
+    setItems,
+  ] = useEducationSection();
 
-  // useEffect(() => {
-  //   (async () => {
-  //     // if (!resumeId) { nav("/builder/heading"); return; }
-  //     try {
-  //       const res = await axios.get(`/api/resumes/${resumeId}`, { withCredentials: true });
-  //       const exp = res?.data?.item?.sections?.experience;
-  //       if (Array.isArray(exp) && exp.length) {
-  //         setItems(exp);
-  //       }
-  //     } catch {}
-  //     setLoading(false);
-  //   })();
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!resumeId) {
+          setLoading(false);
+          return;
+        }
+        const res = await axios.get(`/api/resumes/${resumeId}`, {
+          withCredentials: true,
+        });
+        const edu = res?.data?.item?.sections?.education;
+        if (Array.isArray(edu) && edu.length) {
+          setItems(edu);
+        }
+      } catch {}
+      setLoading(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function update(i: number, patch: Partial<Entry>) {
     const next = [...items];
     next[i] = { ...next[i], ...patch };
-    if (patch.current) {
-      next[i].end = undefined;
-    }
+    if (patch.current) next[i].end = undefined;
     setItems(next);
   }
 
@@ -64,7 +89,7 @@ export default function WorkHistory() {
     const next = [...items];
     next.splice(i, 1);
     setItems(
-      next.length ? next : [{ role: "", company: "", bullets: [] } as Entry]
+      next.length ? next : [{ degree: "", school: "", bullets: [] } as Entry]
     );
   }
 
@@ -79,22 +104,23 @@ export default function WorkHistory() {
   }
 
   function add() {
-    setItems([...items, { role: "", company: "", bullets: [] } as Entry]);
+    setItems([...items, { degree: "", school: "", bullets: [] } as Entry]);
   }
 
   function isValid(e: Entry) {
-    const base = e.role.trim().length > 1 && e.company.trim().length > 1;
+    const base = e.degree.trim().length > 1 && e.school.trim().length > 1;
     const datesOk = !e.start || e.current || !e.end || e.start <= (e.end || "");
     return base && datesOk;
   }
 
   async function saveAndNext() {
     // if (!resumeId) return;
-    // setSaving(true); setError("");
+    setSaving(true);
+    setError("");
     try {
-      // const payload = { sections: { experience: items } };
+      // const payload = { sections: { education: items } };
       // await axios.patch(`/api/resumes/${resumeId}`, payload, { withCredentials: true });
-      nav("/builder/education");
+      nav("/builder/skills");
     } catch (e: any) {
       setError(e?.response?.data?.error || "Could not save. Please try again.");
     } finally {
@@ -102,18 +128,17 @@ export default function WorkHistory() {
     }
   }
 
-  // if (loading) return <div className="p-6 text-sm text-gray-500">Loading…</div>;
+  if (loading) return <div className="p-6 text-sm text-gray-500">Loading…</div>;
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Form + Preview */}
       <section className="mx-auto max-w-6xl px-4 py-6 grid lg:grid-cols-3 gap-10">
         {/* Form */}
         <div className="lg:col-span-2">
-          <h1 className="text-3xl font-bold">
-            Tell us about your work experience
-          </h1>
+          <h1 className="text-3xl font-bold">Add your education</h1>
           <p className="text-gray-600 mt-1">
-            Add your roles, responsibilities and key achievements.
+            Include degrees, relevant coursework, and academic achievements.
           </p>
 
           <div className="mt-6 space-y-5">
@@ -123,8 +148,8 @@ export default function WorkHistory() {
                 className="rounded-2xl border bg-white p-4 shadow-sm"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div className="text-sm font-semibold">
-                    Position #{i + 1}{" "}
+                  <div className="text-sm font-semibold flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4" /> Education #{i + 1}{" "}
                     {isValid(e) && (
                       <CheckCircle2 className="inline h-4 w-4 text-emerald-600 ml-1" />
                     )}
@@ -153,16 +178,31 @@ export default function WorkHistory() {
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <Field
-                    label="Job Title *"
-                    value={e.role}
-                    onChange={(v) => update(i, { role: v })}
-                    placeholder="e.g., Senior Software Engineer"
+                    label="Degree *"
+                    value={e.degree}
+                    onChange={(v) => update(i, { degree: v })}
+                    placeholder="e.g., B.Tech / BSc / MSc"
                   />
                   <Field
-                    label="Company *"
-                    value={e.company}
-                    onChange={(v) => update(i, { company: v })}
-                    placeholder="e.g., Acme Inc"
+                    label="Field of Study"
+                    value={e.field || ""}
+                    onChange={(v) => update(i, { field: v })}
+                    placeholder="e.g., Computer Science"
+                  />
+                </div>
+
+                <div className="mt-3 grid md:grid-cols-2 gap-4">
+                  <Field
+                    label="School / University *"
+                    value={e.school}
+                    onChange={(v) => update(i, { school: v })}
+                    placeholder="e.g., IIT Bombay"
+                  />
+                  <Field
+                    label="GPA (optional)"
+                    value={e.gpa || ""}
+                    onChange={(v) => update(i, { gpa: v })}
+                    placeholder="e.g., 8.6/10 or 3.7/4.0"
                   />
                 </div>
 
@@ -201,17 +241,18 @@ export default function WorkHistory() {
                         update(i, { current: ev.target.checked })
                       }
                     />
-                    I currently work here
+                    I currently study here
                   </label>
                 </div>
 
                 <div className="mt-3">
                   <label className="text-sm font-medium text-gray-700">
-                    Key achievements / responsibilities
+                    Coursework / Highlights
                   </label>
                   <Bullets
                     value={e.bullets}
                     onChange={(v) => update(i, { bullets: v })}
+                    placeholder="e.g., Algorithms, Operating Systems, Databases"
                   />
                 </div>
               </div>
@@ -222,7 +263,7 @@ export default function WorkHistory() {
               onClick={add}
               className="inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm hover:bg-gray-50"
             >
-              <Plus className="h-4 w-4" /> Add another position
+              <Plus className="h-4 w-4" /> Add another education
             </button>
           </div>
 
@@ -231,22 +272,11 @@ export default function WorkHistory() {
 
         {/* Preview */}
         <aside className="lg:col-span-1">
-          <div className="rounded-2xl border bg-white p-4 shadow-sm">
-            <div className="text-sm font-semibold">Live preview</div>
-            <div className="mt-3 space-y-4">
-              <PreviewCard />
-            </div>
-          </div>
+          <PreviewCard DEFAULT_DATA={{}} scale={0.5} />
         </aside>
       </section>
 
-      <Footer
-        nextSectionName="Education"
-        prevSectionName="Heading"
-        prevSection={() => nav("/builder/heading")}
-        nextSection={saveAndNext}
-        saving={false}
-      />
+      <Footer nextSection={saveAndNext} saving={false} />
     </div>
   );
 }
@@ -303,9 +333,11 @@ function MonthInput({
 function Bullets({
   value,
   onChange,
+  placeholder,
 }: {
   value: string[];
   onChange: (v: string[]) => void;
+  placeholder?: string;
 }) {
   const [text, setText] = useState((value || []).join("\n"));
   useEffect(() => {
@@ -321,7 +353,7 @@ function Bullets({
     <div className="mt-1">
       <textarea
         className="w-full min-h-[120px] rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-200"
-        placeholder="Use one line per bullet (e.g., Reduced API latency by 40%)"
+        placeholder={placeholder || "e.g., Algorithms, OS, DBMS, ML"}
         value={text}
         onChange={(e) => {
           setText(e.target.value);
@@ -329,14 +361,13 @@ function Bullets({
         }}
       />
       <div className="mt-1 text-xs text-gray-500">
-        Tip: Start bullets with an action verb and a metric (e.g., "Led",
-        "Improved", "Reduced by 20%").
+        Use one line per item (e.g., "Operating Systems"). Keep 3–6 items max.
       </div>
     </div>
   );
 }
 
-function PreviewJob({ e }: { e: any }) {
+function PreviewEdu({ e }: { e: any }) {
   const range = e.start
     ? `${e.start}${e.current ? " — Present" : e.end ? ` — ${e.end}` : ""}`
     : "";
@@ -345,12 +376,14 @@ function PreviewJob({ e }: { e: any }) {
       <div className="flex items-start justify-between">
         <div>
           <div className="font-semibold leading-tight">
-            {e.role || "Job Title"}
+            {e.degree || "Degree"}
+            {e.field ? `, ${e.field}` : ""}
           </div>
           <div className="text-xs text-gray-600">
-            {e.company || "Company"}
+            {e.school || "School/University"}
             {e.city ? ` • ${e.city}` : ""}
             {e.country ? `, ${e.country}` : ""}
+            {e.gpa ? ` • GPA ${e.gpa}` : ""}
           </div>
         </div>
         <div className="text-[11px] text-gray-500">{range}</div>
@@ -363,7 +396,7 @@ function PreviewJob({ e }: { e: any }) {
         </ul>
       ) : (
         <div className="mt-2 text-xs text-gray-500">
-          Add 2–5 bullets that quantify impact.
+          Add 2–6 coursework/highlights.
         </div>
       )}
     </div>

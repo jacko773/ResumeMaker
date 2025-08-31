@@ -90,7 +90,7 @@ const useResumeSection = <T = any,>(sectionKey: string): T | undefined => {
 
 const useContactSection = () => useResumeSection("contact");
 const useEducationSection = () => useResumeSection("education");
-const useExperinenceSection = () => useResumeSection("experinence");
+const useExperienceSection = () => useResumeSection("experience");
 const useSkillsSection = () => useResumeSection("skills");
 const useProjectsSection = () => useResumeSection("projects");
 const useSummarySection = () => useResumeSection("summary");
@@ -98,7 +98,7 @@ const useSummarySection = () => useResumeSection("summary");
 export {
   useContactSection,
   useEducationSection,
-  useExperinenceSection,
+  useExperienceSection,
   useSkillsSection,
   useProjectsSection,
   useSummarySection,

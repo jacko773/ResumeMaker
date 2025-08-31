@@ -14,14 +14,14 @@ const Header = ({ isNav = true }: HeaderProps) => {
           <div className="h-8 w-8">
             <img
               src="/logo.png"
-              alt="craft Folio"
+              alt="ResuMint – Build resumes · Publish portfolios"
               className="h-full w-full h-8 w-8 "
             />
           </div>
           <div className="inline-flex flex-col items-start">
-            <h1 className="text-4xl sm:text-2xl font-extrabold tracking-tight leading-none">
-              <span className="text-slate-900 dark:text-white">Resu</span>
-              <span className="ml-2 text-emerald-400">Mint</span>
+            <h1 className="text-1xl sm:text-1xl font-extrabold tracking-tight leading-none">
+              <span className="text-slate-900 dark:text-white">Resume</span>
+              <span className="ml-2 text-emerald-400">Maker</span>
             </h1>
 
             {/* <p className="mt-0 text-slate-500 dark:text-slate-400 text-base sm:text-xs text-white">
